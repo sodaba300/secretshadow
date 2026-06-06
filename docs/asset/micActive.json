@@ -1,0 +1,736 @@
+{
+    "frames": {
+        "micActive_0000_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 8,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0001_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 8,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0002_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 8,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0003_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 8,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0004_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 534,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0005_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 534,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0006_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 534,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0007_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 534,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0008_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 1060,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0009_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 1060,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0010_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 1060,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0011_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 1060,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0012_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 1587,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0013_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 1587,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0014_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 1587,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0015_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 1587,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0016_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 2114,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0017_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 2114,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0018_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 2114,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0019_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 2114,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0020_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 2640,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0021_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 2640,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0022_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 2640,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0023_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 2640,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0024_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 3166,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0025_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 3166,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0026_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 3166,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0027_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 3166,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0028_img.png": {
+            "frame": {
+                "x": 8,
+                "y": 3693,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0029_img.png": {
+            "frame": {
+                "x": 946,
+                "y": 3693,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0030_img.png": {
+            "frame": {
+                "x": 1886,
+                "y": 3693,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0031_img.png": {
+            "frame": {
+                "x": 2824,
+                "y": 3693,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0032_img.png": {
+            "frame": {
+                "x": 3764,
+                "y": 8,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0033_img.png": {
+            "frame": {
+                "x": 3764,
+                "y": 534,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0034_img.png": {
+            "frame": {
+                "x": 3764,
+                "y": 1060,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        },
+        "micActive_0035_img.png": {
+            "frame": {
+                "x": 3764,
+                "y": 1587,
+                "w": 924,
+                "h": 512
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1386,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 924,
+                "h": 512
+            }
+        }
+    },
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "version": "1.0",
+        "image": "micActive.webp",
+        "format": "RGBA8888",
+        "size": {
+            "w": 4695,
+            "h": 4212
+        },
+        "scale": "1",
+        "comment": "Created with TexturePacker Online (free version)\nhttps://www.codeandweb.com/texturepacker-online\n\nTexturePacker desktop offers better support for Pixi and Phaser with sprite trimming, better packing algorithms, hardware texture compression, and PNG optimization.\nTry TexturePacker desktop: https://www.codeandweb.com/texturepacker"
+    }
+}
