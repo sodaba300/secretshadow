@@ -1,5 +1,6 @@
 import './style.css'
-import './fonts/orbitron.css'
+import '@fontsource/orbitron/400.css'
+import '@fontsource/orbitron/700.css'
 import { initScaling } from './utils/scaling.js'
 import { initGame } from './pages/game.js'
 
