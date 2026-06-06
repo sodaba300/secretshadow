@@ -1,0 +1,35 @@
+{
+
+    "data": [
+        {
+            "id": 1,
+            "word": "starfish",
+            "image": "data/starfish.webp",
+            "sound": "data/starfish.mp3",
+            "hint": [
+                    {"word": "star", "image": "data/star.webp", "sound": "data/star.mp3"}, 
+                    {"word": "fish", "image": "data/fish.webp", "sound": "data/fish.mp3"}
+                    ]
+        },
+        {
+            "id": 2,
+            "word": "rainbow",
+            "image": "data/rainbow.webp",
+            "sound": "data/rainbow.mp3",
+            "hint": [
+                    {"word": "rain", "image": "data/rain.webp", "sound": "data/rain.mp3"}, 
+                    {"word": "bow", "image": "data/bow.webp", "sound": "data/bow.mp3"}
+                    ]
+        },
+        {
+            "id": 3,
+            "word": "butterfly",
+            "image": "data/butterfly.webp",
+            "sound": "data/butterfly.mp3",
+            "hint": [
+                    {"word": "butter", "image": "data/butter.webp", "sound": "data/butter.mp3"}, 
+                    {"word": "fly", "image": "data/fly.webp", "sound": "data/fly.mp3"}
+                    ]
+        }
+    ]
+}
