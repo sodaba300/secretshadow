@@ -180,30 +180,24 @@ const LASER_IMPACT_RIPPLE_INTERVAL_END_MS = 95
 const LASER_IMPACT_CORE_PULSE_MS = 110
 const SHARD_COLS = 8
 const SHARD_ROWS = 5
-const SHARD_FLOOR_Y = 720
-const SHARD_FLOOR_HEIGHT = 32
-const SHARD_FLOOR_DEPTH = 14
-const SHARD_DEPTH = 15
-const SHARD_PHYSICS_SETTLE_MS = 4800
-const SHARD_PHYSICS_GRAVITY_Y = 5000
-const SHARD_MASS_MIN = 6
-const SHARD_MASS_MAX = 14
-const SHARD_BOUNCE_X = 0.15
-const SHARD_BOUNCE_Y = 0.15
-const SHARD_FLOOR_FRICTION = 1
-const SHARD_DRAG_X = 180
-const SHARD_DRAG_Y = 0
-const SHARD_ANGULAR_DRAG = 250
-const SHARD_EXPLOSION_MIN_SPEED = 280
-const SHARD_EXPLOSION_MAX_SPEED = 520
-const SHARD_EXPLOSION_UPWARD_MAX = -40
-const SHARD_EXPLOSION_DOWN_BOOST_MIN = 260
-const SHARD_EXPLOSION_DOWN_BOOST_MAX = 420
-const SHARD_FLOOR_SPIN_MIN = 150
-const SHARD_FLOOR_SPIN_MAX = 300
-const SHARD_FLOOR_IMPACT_DUST_COUNT = 4
-const SHARD_FLOOR_IMPACT_SHAKE_MS = 60
-const SHARD_FLOOR_IMPACT_SHAKE_INTENSITY = 0.0025
+const SHATTER_DUST_PER_CELL_MIN = 20
+const SHATTER_DUST_PER_CELL_MAX = 30
+const SHATTER_DUST_DEPTH = 15
+const SHATTER_DUST_SCALE_MIN = 0.04
+const SHATTER_DUST_SCALE_MAX = 0.13
+const SHATTER_DUST_TINT = 0xfff6c8
+const SHATTER_DUST_FADE_MIN_MS = 2400
+const SHATTER_DUST_FADE_MAX_MS = 4200
+const SHATTER_DUST_EXPLOSION_SPEED_MIN = 140
+const SHATTER_DUST_EXPLOSION_SPEED_MAX = 360
+const SHATTER_DUST_UPWARD_MIN = -300
+const SHATTER_DUST_UPWARD_MAX = -50
+const SHATTER_DUST_GRAVITY_MIN = 100
+const SHATTER_DUST_GRAVITY_MAX = 150
+const SHATTER_DUST_SPIN_MIN = -100
+const SHATTER_DUST_SPIN_MAX = 100
+const SHATTER_DUST_JITTER = 36
+const SHATTER_DUST_SETTLE_MS = 4500
 const SHARD_EXPLOSION_FLASH_DURATION = 220
 const SHARD_EXPLOSION_SHAKE_DURATION = 280
 const SHARD_EXPLOSION_SHAKE_INTENSITY = 0.01
@@ -352,27 +346,27 @@ function getHintImageScaleForArea(image, areaWidth, areaHeight) {
 }
 
 /**
- * 폭발 속도 — 좌우 분산 + 아래로 추락 (유리 파편)
- * Phaser: vy 양수 = 아래
+ * 조각 위치에서 폭발하며 솟구치는 먼지 파티클 초기 속도
+ * Phaser: vy 음수 = 위, 양수 = 아래
  */
-function getShardExplosionVelocity(shardX, shardY, centerX, centerY) {
-  const offsetX = shardX - centerX
-  const horizSign = offsetX === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(offsetX)
-  const vx =
-    horizSign * Phaser.Math.Between(SHARD_EXPLOSION_MIN_SPEED, SHARD_EXPLOSION_MAX_SPEED) +
-    Phaser.Math.FloatBetween(-50, 50)
+function getShatterDustVelocity(cellX, cellY, centerX, centerY) {
+  const dx = cellX - centerX
+  const dy = cellY - centerY
+  const dist = Math.hypot(dx, dy) || 1
+  const ux = dx / dist
+  const uy = dy / dist
 
-  let vy = Phaser.Math.Between(
-    SHARD_EXPLOSION_DOWN_BOOST_MIN,
-    SHARD_EXPLOSION_DOWN_BOOST_MAX,
+  const radialSpeed = Phaser.Math.Between(
+    SHATTER_DUST_EXPLOSION_SPEED_MIN,
+    SHATTER_DUST_EXPLOSION_SPEED_MAX,
   )
 
-  const radialY = (shardY - centerY) / Math.max(Math.abs(offsetX) + Math.abs(shardY - centerY), 1)
-  vy += radialY * Phaser.Math.Between(0, 60) * 0.35
-
-  if (vy < SHARD_EXPLOSION_UPWARD_MAX) {
-    vy = Phaser.Math.FloatBetween(SHARD_EXPLOSION_UPWARD_MAX, 0)
-  }
+  const vx =
+    ux * radialSpeed +
+    Phaser.Math.FloatBetween(-SHATTER_DUST_JITTER, SHATTER_DUST_JITTER)
+  const vy =
+    uy * radialSpeed * 0.35 +
+    Phaser.Math.FloatBetween(SHATTER_DUST_UPWARD_MIN, SHATTER_DUST_UPWARD_MAX)
 
   return { vx, vy }
 }
@@ -573,10 +567,7 @@ class MainScene extends Phaser.Scene {
     this.laserImpactCore = null
     this.laserImpactHalo = null
     this.laserImpactRippleTimer = null
-    this.wordShards = []
-    this.shardFloor = null
-    this.shardPhysicsGravityBackup = null
-    this.shardFloorShakeCooldown = false
+    this.shatterDustParticles = []
     this.wordBlockContainers = []
     this.bigStarSprite = null
     this.bigStarParticleTimer = null
@@ -1350,44 +1341,112 @@ class MainScene extends Phaser.Scene {
       this.wordImageShadow.setVisible(false)
     }
 
-    const frame = this.wordImageBase.frame
-    const textureKey = getWordImageKey(this.qid)
-    const scale = this.wordImageBase.scaleX
     const totalDisplayW = this.wordImageBase.displayWidth
     const totalDisplayH = this.wordImageBase.displayHeight
-    const cropW = Math.floor(frame.width / SHARD_COLS)
-    const cropH = Math.floor(frame.height / SHARD_ROWS)
     const tileDisplayW = totalDisplayW / SHARD_COLS
     const tileDisplayH = totalDisplayH / SHARD_ROWS
     const left = WORD_IMAGE_X - totalDisplayW / 2
     const top = WORD_IMAGE_Y - totalDisplayH / 2
 
     this.cleanupWordShards()
-
-    for (let row = 0; row < SHARD_ROWS; row += 1) {
-      for (let col = 0; col < SHARD_COLS; col += 1) {
-        const shard = this.add
-          .image(
-            left + col * tileDisplayW + tileDisplayW / 2,
-            top + row * tileDisplayH + tileDisplayH / 2,
-            textureKey,
-          )
-          .setOrigin(0.5)
-          .setScale(scale)
-          .setDepth(SHARD_DEPTH)
-          .setCrop(col * cropW, row * cropH, cropW, cropH)
-
-        this.wordShards.push({
-          sprite: shard,
-          col,
-          row,
-        })
-      }
-    }
+    this.spawnShatterDustFromGrid(left, top, tileDisplayW, tileDisplayH)
 
     this.playWordExplosionBurst()
     this.showWordLetterBlocks()
-    this.createShardPhysics(this.wordShards, onComplete)
+
+    this.time.delayedCall(SHATTER_DUST_SETTLE_MS, () => {
+      onComplete?.()
+    })
+  }
+
+  spawnShatterDustFromGrid(left, top, tileDisplayW, tileDisplayH) {
+    if (!this.textures.exists(STAR_KEY)) return
+
+    const centerX = WORD_IMAGE_X
+    const centerY = WORD_IMAGE_Y
+
+    for (let row = 0; row < SHARD_ROWS; row += 1) {
+      for (let col = 0; col < SHARD_COLS; col += 1) {
+        const cellX = left + col * tileDisplayW + tileDisplayW / 2
+        const cellY = top + row * tileDisplayH + tileDisplayH / 2
+        const particleCount = Phaser.Math.Between(
+          SHATTER_DUST_PER_CELL_MIN,
+          SHATTER_DUST_PER_CELL_MAX,
+        )
+
+        for (let i = 0; i < particleCount; i += 1) {
+          const spawnX =
+            cellX +
+            Phaser.Math.FloatBetween(-tileDisplayW * 0.35, tileDisplayW * 0.35)
+          const spawnY =
+            cellY +
+            Phaser.Math.FloatBetween(-tileDisplayH * 0.35, tileDisplayH * 0.35)
+
+          this.spawnShatterDustParticle(spawnX, spawnY, centerX, centerY)
+        }
+      }
+    }
+  }
+
+  spawnShatterDustParticle(spawnX, spawnY, centerX, centerY) {
+    const scale = Phaser.Math.FloatBetween(
+      SHATTER_DUST_SCALE_MIN,
+      SHATTER_DUST_SCALE_MAX,
+    )
+    const fadeDuration = Phaser.Math.Between(
+      SHATTER_DUST_FADE_MIN_MS,
+      SHATTER_DUST_FADE_MAX_MS,
+    )
+    const startAlpha = Phaser.Math.FloatBetween(0.75, 1)
+    const startAngle = Phaser.Math.Between(0, 360)
+    const { vx, vy } = getShatterDustVelocity(spawnX, spawnY, centerX, centerY)
+    const gravity = Phaser.Math.Between(
+      SHATTER_DUST_GRAVITY_MIN,
+      SHATTER_DUST_GRAVITY_MAX,
+    )
+    const spinSpeed = Phaser.Math.Between(
+      SHATTER_DUST_SPIN_MIN,
+      SHATTER_DUST_SPIN_MAX,
+    )
+
+    const particle = this.add
+      .image(spawnX, spawnY, STAR_KEY)
+      .setOrigin(0.5)
+      .setScale(scale)
+      .setAlpha(startAlpha)
+      .setAngle(startAngle)
+      .setTint(SHATTER_DUST_TINT)
+      .setDepth(SHATTER_DUST_DEPTH)
+      .setBlendMode(Phaser.BlendModes.ADD)
+
+    this.shatterDustParticles.push(particle)
+
+    const dustTween = this.tweens.addCounter({
+      from: 0,
+      to: fadeDuration,
+      duration: fadeDuration,
+      onUpdate: (tween) => {
+        if (!particle.active) return
+
+        const elapsedMs = tween.getValue()
+        const t = elapsedMs / 1000
+        const lifeRatio = elapsedMs / fadeDuration
+
+        particle.x = spawnX + vx * t
+        particle.y = spawnY + vy * t + 0.5 * gravity * t * t
+        particle.angle = startAngle + spinSpeed * t
+        particle.alpha = startAlpha * (1 - lifeRatio * lifeRatio)
+        particle.setScale(scale * (1 - lifeRatio * 0.7))
+      },
+      onComplete: () => {
+        particle.destroy()
+        this.shatterDustParticles = this.shatterDustParticles.filter(
+          (item) => item !== particle,
+        )
+      },
+    })
+
+    particle._dustTween = dustTween
   }
 
   playWordExplosionBurst() {
@@ -1418,7 +1477,7 @@ class MainScene extends Phaser.Scene {
 
     const flash = this.add
       .circle(WORD_IMAGE_X, WORD_IMAGE_Y, 28, 0xcc66ff, 0.9)
-      .setDepth(SHARD_DEPTH + 2)
+      .setDepth(SHATTER_DUST_DEPTH + 2)
       .setStrokeStyle(4, 0xffffff, 0.75)
 
     this.tweens.add({
@@ -1435,7 +1494,7 @@ class MainScene extends Phaser.Scene {
 
     const ring = this.add
       .circle(WORD_IMAGE_X, WORD_IMAGE_Y, 40, 0xffffff, 0)
-      .setDepth(SHARD_DEPTH + 1)
+      .setDepth(SHATTER_DUST_DEPTH + 1)
       .setStrokeStyle(6, 0xffffff, 0.55)
 
     this.tweens.add({
@@ -1812,210 +1871,16 @@ class MainScene extends Phaser.Scene {
     })
   }
 
-  createShardPhysics(shards, onComplete) {
-    if (!this.physics || shards.length === 0) {
-      onComplete?.()
-      return
-    }
-
-    const { width } = this.scale
-
-    if (this.shardFloor) {
-      this.shardFloor.destroy()
-      this.shardFloor = null
-    }
-
-    this.shardFloor = this.add
-      .rectangle(
-        width / 2,
-        SHARD_FLOOR_Y,
-        width,
-        SHARD_FLOOR_HEIGHT,
-        0x000000,
-        0,
-      )
-      .setOrigin(0.5)
-      .setDepth(SHARD_FLOOR_DEPTH)
-      .setVisible(false)
-
-    this.physics.add.existing(this.shardFloor, true)
-    this.shardFloor.body.friction = SHARD_FLOOR_FRICTION
-    this.shardFloor.refreshBody?.()
-
-    this.shardPhysicsGravityBackup = this.physics.world.gravity.y
-    this.physics.world.gravity.y = SHARD_PHYSICS_GRAVITY_Y
-
-    const shardSprites = shards.map((entry) =>
-      typeof entry === 'object' && entry?.sprite ? entry.sprite : entry,
-    )
-    const explosionCenterX = WORD_IMAGE_X
-    const explosionCenterY = WORD_IMAGE_Y
-
-    shardSprites.forEach((shard, index) => {
-      this.physics.add.existing(shard)
-
-      const body = shard.body
-      body.setBounce(SHARD_BOUNCE_X, SHARD_BOUNCE_Y)
-      body.setFriction(SHARD_FLOOR_FRICTION, 0)
-      body.setMass(Phaser.Math.Between(SHARD_MASS_MIN, SHARD_MASS_MAX))
-      body.setCollideWorldBounds(false)
-      body.setAllowGravity(true)
-      body.setDragX(SHARD_DRAG_X)
-      body.setDragY(SHARD_DRAG_Y)
-      body.setAngularDrag(SHARD_ANGULAR_DRAG)
-      body.setMaxVelocity(900, 2800)
-      body.setAllowRotation(true)
-      body.updateFromGameObject()
-      body.setAngularVelocity(Phaser.Math.Between(-80, 80))
-      shard.setData('floorHit', false)
-
-      const { vx, vy } = getShardExplosionVelocity(
-        shard.x,
-        shard.y,
-        explosionCenterX,
-        explosionCenterY,
-      )
-      body.setVelocity(vx, vy)
-
-      const entry = shards[index]
-      const stagger =
-        typeof entry === 'object' && entry?.col != null
-          ? (entry.col + (entry.row ?? 0)) * 8
-          : index * 6
-
-      const baseScale = shard.scaleX
-      shard.setScale(baseScale * 0.86)
-      this.tweens.add({
-        targets: shard,
-        scaleX: baseScale,
-        scaleY: baseScale,
-        duration: 100,
-        delay: stagger,
-        ease: 'Back.out',
-        onComplete: () => {
-          shard.body?.updateFromGameObject()
-        },
-      })
-    })
-
-    this.physics.add.collider(
-      shardSprites,
-      this.shardFloor,
-      this.onShardHitFloor,
-      undefined,
-      this,
-    )
-
-    this.time.delayedCall(SHARD_PHYSICS_SETTLE_MS, () => {
-      onComplete?.()
-    })
-  }
-
-  onShardHitFloor(objA, objB) {
-    const shard =
-      objA === this.shardFloor || objA?.body?.immovable ? objB : objA
-    if (!shard?.body) return
-
-    const body = shard.body
-    if (!body.blocked.down && !body.touching.down) return
-    if (shard.getData('floorHit')) return
-    if (Math.abs(body.velocity.y) < 80 && Math.abs(body.velocity.x) < 40) return
-
-    shard.setData('floorHit', true)
-
-    const slideX = body.velocity.x
-    const spinSign = slideX !== 0 ? Math.sign(slideX) : (Math.random() < 0.5 ? -1 : 1)
-    body.setAngularVelocity(
-      spinSign * Phaser.Math.Between(SHARD_FLOOR_SPIN_MIN, SHARD_FLOOR_SPIN_MAX),
-    )
-
-    this.playShardFloorImpact(shard.x, SHARD_FLOOR_Y - SHARD_FLOOR_HEIGHT / 2)
-  }
-
-  playShardFloorImpact(x, y) {
-    for (let i = 0; i < SHARD_FLOOR_IMPACT_DUST_COUNT; i += 1) {
-      const dust = this.add
-        .circle(
-          x + Phaser.Math.Between(-18, 18),
-          y + Phaser.Math.Between(-6, 4),
-          Phaser.Math.Between(2, 5),
-          0xbbbbbb,
-          0.65,
-        )
-        .setDepth(SHARD_DEPTH + 3)
-
-      this.tweens.add({
-        targets: dust,
-        x: dust.x + Phaser.Math.Between(-24, 24),
-        y: dust.y + Phaser.Math.Between(-16, 8),
-        alpha: 0,
-        scale: 0.2,
-        duration: Phaser.Math.Between(180, 320),
-        ease: 'Quad.out',
-        onComplete: () => {
-          dust.destroy()
-        },
-      })
-    }
-
-    if (this.textures.exists(STAR_KEY)) {
-      const spark = this.add
-        .image(x, y, STAR_KEY)
-        .setOrigin(0.5)
-        .setScale(0.07)
-        .setTint(0xffffff)
-        .setAlpha(0.85)
-        .setDepth(SHARD_DEPTH + 4)
-
-      this.tweens.add({
-        targets: spark,
-        scale: 0.02,
-        alpha: 0,
-        duration: 140,
-        ease: 'Quad.in',
-        onComplete: () => {
-          spark.destroy()
-        },
-      })
-    }
-
-    if (!this.shardFloorShakeCooldown) {
-      this.shardFloorShakeCooldown = true
-      this.cameras.main.shake(
-        SHARD_FLOOR_IMPACT_SHAKE_MS,
-        SHARD_FLOOR_IMPACT_SHAKE_INTENSITY,
-      )
-      this.time.delayedCall(90, () => {
-        this.shardFloorShakeCooldown = false
-      })
-    }
-  }
-
-  restoreShardPhysicsGravity() {
-    if (this.shardPhysicsGravityBackup != null) {
-      this.physics.world.gravity.y = this.shardPhysicsGravityBackup
-      this.shardPhysicsGravityBackup = null
-    }
-  }
-
   cleanupWordShards() {
-    this.restoreShardPhysicsGravity()
-    this.shardFloorShakeCooldown = false
+    if (!this.shatterDustParticles.length) return
 
-    if (this.wordShards.length > 0) {
-      this.wordShards.forEach((entry) => {
-        const shard =
-          typeof entry === 'object' && entry?.sprite ? entry.sprite : entry
-        shard.destroy()
-      })
-      this.wordShards = []
-    }
-
-    if (this.shardFloor) {
-      this.shardFloor.destroy()
-      this.shardFloor = null
-    }
-
+    this.shatterDustParticles.forEach((particle) => {
+      if (particle._dustTween) {
+        particle._dustTween.stop()
+      }
+      particle.destroy()
+    })
+    this.shatterDustParticles = []
   }
 
   handleVoiceFail(transcript) {

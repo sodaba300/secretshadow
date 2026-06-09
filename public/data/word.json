@@ -30,6 +30,16 @@
                     {"word": "butter", "image": "data/butter.webp", "sound": "data/butter.mp3"}, 
                     {"word": "fly", "image": "data/fly.webp", "sound": "data/fly.mp3"}
                     ]
+        },
+        {
+            "id": 4,
+            "word": "sunflower",
+            "image": "data/sunflower.webp",
+            "sound": "data/sunflower.mp3",
+            "hint": [
+                    {"word": "sun", "image": "data/sun.webp", "sound": "data/sun.mp3"}, 
+                    {"word": "flower", "image": "data/flower.webp", "sound": "data/flower.mp3"}
+                    ]
         }
     ]
 }
