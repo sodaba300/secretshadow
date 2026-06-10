@@ -141,6 +141,7 @@ const FALLING_STAR_BOUNCE_RISE_OFFSET = 90
 const FALLING_STAR_BOUNCE_RISE_DURATION = 240
 const FALLING_STAR_FADE_DURATION = 1100
 const VOICE_RETRY_DELAY_MS = 3000
+const VOICE_WRONG_ANSWER_RETRY_DELAY_MS = 400
 const VOICE_NETWORK_RETRY_DELAY_MS = 6000
 const VOICE_SESSION_COOLDOWN_MS = 400
 const VOICE_ERROR_SUPPRESS_MS = 300
@@ -268,6 +269,7 @@ const DEBUG_BTN_WIDTH = 96
 const DEBUG_BTN_HEIGHT = 40
 const DEBUG_BTN_MARGIN = 24
 const DEBUG_BTN_GAP = 12
+const SHOW_DEBUG_ANSWER_BUTTONS = false
 
 function toPublicPath(path) {
   return publicPath(path)
@@ -782,8 +784,8 @@ class MainScene extends Phaser.Scene {
     }
   }
 
-  setupVoiceRecognition() {
-    if (this.voiceProvider) return
+  setupVoiceRecognition({ force = false } = {}) {
+    if (this.voiceProvider && !force) return
 
     this.voiceProvider = createBrowserSpeechProvider()
 
@@ -828,6 +830,7 @@ class MainScene extends Phaser.Scene {
       this.voiceListening = true
       this.voiceSessionHasTranscript = false
       this.voicePendingRetryReason = null
+      this.resumeMicActiveAnimation()
     })
 
     this.voiceProvider.onEnd(() => {
@@ -861,8 +864,39 @@ class MainScene extends Phaser.Scene {
     })
   }
 
-  stopVoiceRecognition() {
-    if (this.voiceRetryTimer) {
+  resetVoiceProvider() {
+    if (this.suppressVoiceErrorTimer) {
+      this.suppressVoiceErrorTimer.remove()
+      this.suppressVoiceErrorTimer = null
+    }
+
+    if (this.voiceProvider) {
+      this.suppressVoiceErrors = true
+      try {
+        this.voiceProvider.stop()
+      } catch (error) {
+        console.warn('[STT] reset stop failed:', error)
+      }
+    }
+
+    this.voiceProvider = null
+    this.voiceListening = false
+    this.voiceSessionHasTranscript = true
+    this.setupVoiceRecognition({ force: true })
+    this.suppressVoiceErrors = false
+  }
+
+  resumeMicActiveAnimation() {
+    if (!this.micActiveSprite?.anims) return
+
+    const anims = this.micActiveSprite.anims
+    if (!anims.isPlaying || anims.currentAnim?.key !== MIC_ACTIVE_ANIM_KEY) {
+      this.micActiveSprite.play(MIC_ACTIVE_ANIM_KEY)
+    }
+  }
+
+  stopVoiceRecognition({ cancelPendingRetry = true } = {}) {
+    if (cancelPendingRetry && this.voiceRetryTimer) {
       this.voiceRetryTimer.remove()
       this.voiceRetryTimer = null
     }
@@ -895,15 +929,21 @@ class MainScene extends Phaser.Scene {
     if (this.voiceAnswered || this.voiceRetryTimer) return
 
     const delay =
-      reason === 'network' || reason === 'start-failed'
-        ? VOICE_NETWORK_RETRY_DELAY_MS
-        : VOICE_RETRY_DELAY_MS
+      reason === 'wrong-answer'
+        ? VOICE_WRONG_ANSWER_RETRY_DELAY_MS
+        : reason === 'network' || reason === 'start-failed'
+          ? VOICE_NETWORK_RETRY_DELAY_MS
+          : VOICE_RETRY_DELAY_MS
 
     this.voiceRetryTimer = this.time.delayedCall(delay, () => {
       this.voiceRetryTimer = null
-      if (!this.voiceAnswered) {
-        this.startVoiceRecognitionAfterCooldown()
+      if (this.voiceAnswered || this.timeUpHandled) return
+
+      if (reason === 'wrong-answer') {
+        this.resetVoiceProvider()
       }
+
+      this.startVoiceRecognitionAfterCooldown()
     })
   }
 
@@ -940,7 +980,7 @@ class MainScene extends Phaser.Scene {
     if (!trimmed) return
 
     this.voiceSessionHasTranscript = true
-    this.stopVoiceRecognition()
+    this.stopVoiceRecognition({ cancelPendingRetry: false })
 
     if (!this.firstSpeechRecorded) {
       this.speechTime = Date.now()
@@ -1900,6 +1940,8 @@ class MainScene extends Phaser.Scene {
   }
 
   createDebugAnswerButtons() {
+    if (!SHOW_DEBUG_ANSWER_BUTTONS) return
+
     const { width, height } = this.scale
     const baseY = height - DEBUG_BTN_MARGIN
     const correctX = width - DEBUG_BTN_MARGIN
