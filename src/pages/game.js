@@ -57,6 +57,9 @@ const CLOUD_ANIM_DURATION = 2000
 const CLOUD_1_END_X = CLOUD_1_X - CLOUD_MOVE_OFFSET
 const CLOUD_2_END_X = CLOUD_2_X + CLOUD_MOVE_OFFSET
 const TIMER_CLOUD_RETURN_AT = 15
+const FAST_ANSWER_MAX_MS = 1500
+const FAST_ANSWER_COIN_COUNT = 3
+const HINT_EARLY_REVEAL_MS = 2500
 const SILHOUETTE_FADE_DURATION = 2000
 const CLOUD_DEPTH = 20
 const HINT_PANEL_KEY = 'hintPanel'
@@ -561,6 +564,10 @@ class MainScene extends Phaser.Scene {
     this.voiceNetworkErrorNotified = false
     this.firstSpeechRecorded = false
     this.revealCompleteTime = null
+    this.problemStartTime = null
+    this.isFastCorrectAnswer = false
+    this.earlyHintTimeReached = false
+    this.earlyHintRevealTimer = null
     this.speechTime = null
     this.targetWord = ''
     this.micLaserGraphics = null
@@ -952,8 +959,8 @@ class MainScene extends Phaser.Scene {
     const normalizedTarget = normalizeTargetWord(this.targetWord)
     const verdict = isCorrect ? '정답' : '오답'
     const latencyMs =
-      this.revealCompleteTime != null && this.speechTime != null
-        ? this.speechTime - this.revealCompleteTime
+      this.problemStartTime != null && this.speechTime != null
+        ? this.speechTime - this.problemStartTime
         : null
     const latencySec =
       latencyMs != null ? `${(latencyMs / 1000).toFixed(2)} sec` : 'n/a'
@@ -966,6 +973,7 @@ class MainScene extends Phaser.Scene {
       normalizedTarget,
       matched: normalizedStt === normalizedTarget,
       latency: latencySec,
+      fastAnswer: isCorrect ? this.isFastCorrectAnswer : undefined,
     })
 
     if (latencyMs != null) {
@@ -996,6 +1004,10 @@ class MainScene extends Phaser.Scene {
 
   handleVoiceSuccess(transcript) {
     this.voiceAnswered = true
+    this.isFastCorrectAnswer =
+      this.problemStartTime != null &&
+      Date.now() - this.problemStartTime <= FAST_ANSWER_MAX_MS
+    this.clearEarlyHintRevealTimer()
     this.logVoiceResult(transcript, true)
     this.playCorrectAnswerSound()
 
@@ -1683,7 +1695,11 @@ class MainScene extends Phaser.Scene {
     if (!this.textures.exists(COIN_KEY)) return false
     if (!this.createCoinAnimation()) return false
 
-    const spawnCount = this.wereHintPanelsShownBeforeSuccess() ? 1 : 2
+    const spawnCount = this.isFastCorrectAnswer
+      ? FAST_ANSWER_COIN_COUNT
+      : this.wereHintPanelsShownBeforeSuccess()
+        ? 1
+        : 2
     this.pendingRewardCoins = spawnCount
 
     for (let index = 0; index < spawnCount; index += 1) {
@@ -2415,6 +2431,7 @@ class MainScene extends Phaser.Scene {
       this.startOverlayContainer.destroy(true)
       this.startOverlayContainer = null
     }
+    this.clearEarlyHintRevealTimer()
     this.stopVoiceRecognition()
     this.stopTimerCountdown()
     this.cleanupRewardCoin()
@@ -2469,6 +2486,10 @@ class MainScene extends Phaser.Scene {
   startTimerCountdown() {
     this.stopTimerCountdown()
     this.timerPaused = false
+    this.problemStartTime = Date.now()
+    this.isFastCorrectAnswer = false
+    this.earlyHintTimeReached = false
+    this.scheduleEarlyHintReveal()
 
     if (!this.clockTimerText) return
 
@@ -2502,6 +2523,7 @@ class MainScene extends Phaser.Scene {
     if (this.timeUpHandled || this.voiceAnswered) return
     this.timeUpHandled = true
 
+    this.clearEarlyHintRevealTimer()
     this.stopTimerCountdown()
     this.stopVoiceRecognition()
     this.stopMicActiveOnFirstFrame()
@@ -2654,6 +2676,26 @@ class MainScene extends Phaser.Scene {
     }
   }
 
+  scheduleEarlyHintReveal() {
+    this.clearEarlyHintRevealTimer()
+
+    this.earlyHintRevealTimer = this.time.delayedCall(
+      HINT_EARLY_REVEAL_MS,
+      () => {
+        this.earlyHintRevealTimer = null
+        this.earlyHintTimeReached = true
+        this.revealHintsIfNeeded()
+      },
+    )
+  }
+
+  clearEarlyHintRevealTimer() {
+    if (this.earlyHintRevealTimer) {
+      this.earlyHintRevealTimer.remove()
+      this.earlyHintRevealTimer = null
+    }
+  }
+
   revealHintsIfNeeded() {
     if (this.cloudReturnTriggered || this.voiceAnswered || this.timeUpHandled) {
       return
@@ -2661,7 +2703,8 @@ class MainScene extends Phaser.Scene {
 
     if (
       this.remainingTime > TIMER_CLOUD_RETURN_AT &&
-      !this.hasWrongAnswer
+      !this.hasWrongAnswer &&
+      !this.earlyHintTimeReached
     ) {
       return
     }
