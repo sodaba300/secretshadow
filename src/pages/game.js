@@ -543,6 +543,7 @@ class MainScene extends Phaser.Scene {
     this.timerCountdownEvent = null
     this.timerPaused = false
     this.cloudReturnTriggered = false
+    this.hasWrongAnswer = false
     this.hintPanelContainer1 = null
     this.hintPanelContainer2 = null
     this.hintPanelsAnimated = false
@@ -1890,7 +1891,10 @@ class MainScene extends Phaser.Scene {
       return
     }
 
+    this.hasWrongAnswer = true
+
     this.playIncorrectAnswerSound(() => {
+      this.revealHintsIfNeeded()
       this.queueVoiceRestart('wrong-answer')
     })
   }
@@ -2438,11 +2442,8 @@ class MainScene extends Phaser.Scene {
         this.remainingTime -= 1
         this.clockTimerText.setText(formatTime(this.remainingTime))
 
-        if (
-          this.remainingTime === TIMER_CLOUD_RETURN_AT &&
-          !this.cloudReturnTriggered
-        ) {
-          this.triggerCloudReturnAtTimer()
+        if (this.remainingTime === TIMER_CLOUD_RETURN_AT) {
+          this.revealHintsIfNeeded()
         }
 
         if (this.remainingTime <= 0) {
@@ -2609,6 +2610,21 @@ class MainScene extends Phaser.Scene {
       this.timerCountdownEvent.remove()
       this.timerCountdownEvent = null
     }
+  }
+
+  revealHintsIfNeeded() {
+    if (this.cloudReturnTriggered || this.voiceAnswered || this.timeUpHandled) {
+      return
+    }
+
+    if (
+      this.remainingTime > TIMER_CLOUD_RETURN_AT &&
+      !this.hasWrongAnswer
+    ) {
+      return
+    }
+
+    this.triggerCloudReturnAtTimer()
   }
 
   triggerCloudReturnAtTimer() {
