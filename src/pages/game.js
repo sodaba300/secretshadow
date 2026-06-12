@@ -59,7 +59,6 @@ const CLOUD_2_END_X = CLOUD_2_X + CLOUD_MOVE_OFFSET
 const TIMER_CLOUD_RETURN_AT = 15
 const FAST_ANSWER_MAX_MS = 1500
 const FAST_ANSWER_COIN_COUNT = 3
-const HINT_EARLY_REVEAL_MS = 2500
 const SILHOUETTE_FADE_DURATION = 2000
 const CLOUD_DEPTH = 20
 const HINT_PANEL_KEY = 'hintPanel'
@@ -74,7 +73,12 @@ const HINT_PANEL_DROP_DURATION = 650
 const HINT_PANEL_BOUNCE_DURATION = 260
 const HINT_PANEL_SFX_KEY = 'hintPanelSfx'
 const HINT_PANEL_SFX_PATH = publicPath('asset/hintPannel.mp3')
-const HINT_WORD_COLOR = '#ffffff'
+const HINT_TIP_TEXT = 'Tip : 두 단어가 합쳐진 단어를 떠올려 보세요.'
+const HINT_TIP_GAP_BELOW_PANEL = 28
+const HINT_TIP_FONT_SIZE = '22px'
+const HINT_TIP_COLOR = '#fed375'
+const HINT_TIP_DEPTH = HINT_PANEL_DEPTH + 1
+const HINT_WORD_COLOR = '#fed375'
 // hintPannel.webp(402×610) 디자인 기준 영역 — 비율로 환산해 해상도 변경에도 대응
 const HINT_PANEL_IMAGE_AREA_NORM = {
   x: 50 / 402,
@@ -272,7 +276,7 @@ const DEBUG_BTN_WIDTH = 96
 const DEBUG_BTN_HEIGHT = 40
 const DEBUG_BTN_MARGIN = 24
 const DEBUG_BTN_GAP = 12
-const SHOW_DEBUG_ANSWER_BUTTONS = false
+const SHOW_DEBUG_ANSWER_BUTTONS = true
 
 function toPublicPath(path) {
   return publicPath(path)
@@ -548,9 +552,9 @@ class MainScene extends Phaser.Scene {
     this.timerCountdownEvent = null
     this.timerPaused = false
     this.cloudReturnTriggered = false
-    this.hasWrongAnswer = false
     this.hintPanelContainer1 = null
     this.hintPanelContainer2 = null
+    this.hintTipText = null
     this.hintPanelsAnimated = false
     this.voiceProvider = null
     this.voiceAnswered = false
@@ -566,8 +570,6 @@ class MainScene extends Phaser.Scene {
     this.revealCompleteTime = null
     this.problemStartTime = null
     this.isFastCorrectAnswer = false
-    this.earlyHintTimeReached = false
-    this.earlyHintRevealTimer = null
     this.speechTime = null
     this.targetWord = ''
     this.micLaserGraphics = null
@@ -1007,7 +1009,6 @@ class MainScene extends Phaser.Scene {
     this.isFastCorrectAnswer =
       this.problemStartTime != null &&
       Date.now() - this.problemStartTime <= FAST_ANSWER_MAX_MS
-    this.clearEarlyHintRevealTimer()
     this.logVoiceResult(transcript, true)
     this.playCorrectAnswerSound()
 
@@ -1947,10 +1948,7 @@ class MainScene extends Phaser.Scene {
       return
     }
 
-    this.hasWrongAnswer = true
-
     this.playIncorrectAnswerSound(() => {
-      this.revealHintsIfNeeded()
       this.queueVoiceRestart('wrong-answer')
     })
   }
@@ -2431,7 +2429,6 @@ class MainScene extends Phaser.Scene {
       this.startOverlayContainer.destroy(true)
       this.startOverlayContainer = null
     }
-    this.clearEarlyHintRevealTimer()
     this.stopVoiceRecognition()
     this.stopTimerCountdown()
     this.cleanupRewardCoin()
@@ -2488,8 +2485,6 @@ class MainScene extends Phaser.Scene {
     this.timerPaused = false
     this.problemStartTime = Date.now()
     this.isFastCorrectAnswer = false
-    this.earlyHintTimeReached = false
-    this.scheduleEarlyHintReveal()
 
     if (!this.clockTimerText) return
 
@@ -2523,7 +2518,6 @@ class MainScene extends Phaser.Scene {
     if (this.timeUpHandled || this.voiceAnswered) return
     this.timeUpHandled = true
 
-    this.clearEarlyHintRevealTimer()
     this.stopTimerCountdown()
     this.stopVoiceRecognition()
     this.stopMicActiveOnFirstFrame()
@@ -2589,6 +2583,8 @@ class MainScene extends Phaser.Scene {
         onAllComplete?.()
       }
     }
+
+    this.retractHintTipText()
 
     if (this.hintPanelContainer1) {
       panelCount += 1
@@ -2676,36 +2672,12 @@ class MainScene extends Phaser.Scene {
     }
   }
 
-  scheduleEarlyHintReveal() {
-    this.clearEarlyHintRevealTimer()
-
-    this.earlyHintRevealTimer = this.time.delayedCall(
-      HINT_EARLY_REVEAL_MS,
-      () => {
-        this.earlyHintRevealTimer = null
-        this.earlyHintTimeReached = true
-        this.revealHintsIfNeeded()
-      },
-    )
-  }
-
-  clearEarlyHintRevealTimer() {
-    if (this.earlyHintRevealTimer) {
-      this.earlyHintRevealTimer.remove()
-      this.earlyHintRevealTimer = null
-    }
-  }
-
   revealHintsIfNeeded() {
     if (this.cloudReturnTriggered || this.voiceAnswered || this.timeUpHandled) {
       return
     }
 
-    if (
-      this.remainingTime > TIMER_CLOUD_RETURN_AT &&
-      !this.hasWrongAnswer &&
-      !this.earlyHintTimeReached
-    ) {
+    if (this.remainingTime > TIMER_CLOUD_RETURN_AT) {
       return
     }
 
@@ -2895,9 +2867,72 @@ class MainScene extends Phaser.Scene {
     return container
   }
 
+  getHintTipPosition() {
+    const x = (HINT_PANEL_1_X + HINT_PANEL_2_X) / 2
+    let y = HINT_PANEL_TARGET_Y + 320 + HINT_TIP_GAP_BELOW_PANEL
+
+    if (this.textures.exists(HINT_PANEL_KEY)) {
+      const { height } = getHintPanelFrameSize(this.textures, HINT_PANEL_KEY)
+      y = HINT_PANEL_TARGET_Y + height / 2 + HINT_TIP_GAP_BELOW_PANEL
+    }
+
+    return { x, y }
+  }
+
+  showHintTipText() {
+    this.destroyHintTipText()
+
+    const { x, y } = this.getHintTipPosition()
+
+    this.hintTipText = this.add
+      .text(x, y, HINT_TIP_TEXT, {
+        fontFamily: 'Malgun Gothic, Arial, sans-serif',
+        fontSize: HINT_TIP_FONT_SIZE,
+        color: HINT_TIP_COLOR,
+        align: 'center',
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(HINT_TIP_DEPTH)
+      .setAlpha(0)
+
+    this.tweens.add({
+      targets: this.hintTipText,
+      alpha: 1,
+      duration: HINT_PANEL_DROP_DURATION + HINT_PANEL_BOUNCE_DURATION,
+      ease: 'Cubic.out',
+    })
+  }
+
+  retractHintTipText() {
+    if (!this.hintTipText) return
+
+    const tipText = this.hintTipText
+    this.hintTipText = null
+    this.tweens.killTweensOf(tipText)
+    this.tweens.add({
+      targets: tipText,
+      alpha: 0,
+      duration: HINT_PANEL_BOUNCE_DURATION,
+      ease: 'Cubic.in',
+      onComplete: () => {
+        tipText.destroy()
+      },
+    })
+  }
+
+  destroyHintTipText() {
+    if (!this.hintTipText) return
+
+    this.tweens.killTweensOf(this.hintTipText)
+    this.hintTipText.destroy()
+    this.hintTipText = null
+  }
+
   animateHintPanelsEntry() {
     if (this.hintPanelsAnimated) return
     this.hintPanelsAnimated = true
+
+    this.showHintTipText()
 
     this.playHintPanelDropSound(() => {
       this.playHintSoundsSequentially()
