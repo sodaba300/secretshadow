@@ -75,8 +75,12 @@ const HINT_PANEL_SFX_KEY = 'hintPanelSfx'
 const HINT_PANEL_SFX_PATH = publicPath('asset/hintPannel.mp3')
 const HINT_TIP_TEXT = 'Tip : 두 단어가 합쳐진 단어를 떠올려 보세요.'
 const HINT_TIP_GAP_BELOW_PANEL = 28
+const HINT_TIP_OFFSET_Y = -56
 const HINT_TIP_FONT_SIZE = '22px'
 const HINT_TIP_COLOR = '#fed375'
+const HINT_TIP_BG_COLOR = 0x3b185a
+const HINT_TIP_PADDING_X = 24
+const HINT_TIP_PADDING_Y = 14
 const HINT_TIP_DEPTH = HINT_PANEL_DEPTH + 1
 const HINT_WORD_COLOR = '#fed375'
 // hintPannel.webp(402×610) 디자인 기준 영역 — 비율로 환산해 해상도 변경에도 대응
@@ -276,7 +280,7 @@ const DEBUG_BTN_WIDTH = 96
 const DEBUG_BTN_HEIGHT = 40
 const DEBUG_BTN_MARGIN = 24
 const DEBUG_BTN_GAP = 12
-const SHOW_DEBUG_ANSWER_BUTTONS = true
+const SHOW_DEBUG_ANSWER_BUTTONS = false
 
 function toPublicPath(path) {
   return publicPath(path)
@@ -554,7 +558,7 @@ class MainScene extends Phaser.Scene {
     this.cloudReturnTriggered = false
     this.hintPanelContainer1 = null
     this.hintPanelContainer2 = null
-    this.hintTipText = null
+    this.hintTipContainer = null
     this.hintPanelsAnimated = false
     this.voiceProvider = null
     this.voiceAnswered = false
@@ -2869,11 +2873,16 @@ class MainScene extends Phaser.Scene {
 
   getHintTipPosition() {
     const x = (HINT_PANEL_1_X + HINT_PANEL_2_X) / 2
-    let y = HINT_PANEL_TARGET_Y + 320 + HINT_TIP_GAP_BELOW_PANEL
+    let y =
+      HINT_PANEL_TARGET_Y + 320 + HINT_TIP_GAP_BELOW_PANEL + HINT_TIP_OFFSET_Y
 
     if (this.textures.exists(HINT_PANEL_KEY)) {
       const { height } = getHintPanelFrameSize(this.textures, HINT_PANEL_KEY)
-      y = HINT_PANEL_TARGET_Y + height / 2 + HINT_TIP_GAP_BELOW_PANEL
+      y =
+        HINT_PANEL_TARGET_Y +
+        height / 2 +
+        HINT_TIP_GAP_BELOW_PANEL +
+        HINT_TIP_OFFSET_Y
     }
 
     return { x, y }
@@ -2884,19 +2893,33 @@ class MainScene extends Phaser.Scene {
 
     const { x, y } = this.getHintTipPosition()
 
-    this.hintTipText = this.add
-      .text(x, y, HINT_TIP_TEXT, {
+    const tipText = this.add
+      .text(0, 0, HINT_TIP_TEXT, {
         fontFamily: 'Malgun Gothic, Arial, sans-serif',
         fontSize: HINT_TIP_FONT_SIZE,
         color: HINT_TIP_COLOR,
         align: 'center',
       })
-      .setOrigin(0.5, 0)
+      .setOrigin(0.5, 0.5)
+
+    const boxWidth = tipText.width + HINT_TIP_PADDING_X * 2
+    const boxHeight = tipText.height + HINT_TIP_PADDING_Y * 2
+
+    const tipBackground = this.add
+      .rectangle(0, boxHeight / 2, boxWidth, boxHeight, HINT_TIP_BG_COLOR, 1)
+      .setOrigin(0.5, 0.5)
+
+    tipText.setPosition(0, boxHeight / 2)
+
+    this.hintTipContainer = this.add
+      .container(x, y)
       .setDepth(HINT_TIP_DEPTH)
       .setAlpha(0)
 
+    this.hintTipContainer.add([tipBackground, tipText])
+
     this.tweens.add({
-      targets: this.hintTipText,
+      targets: this.hintTipContainer,
       alpha: 1,
       duration: HINT_PANEL_DROP_DURATION + HINT_PANEL_BOUNCE_DURATION,
       ease: 'Cubic.out',
@@ -2904,28 +2927,28 @@ class MainScene extends Phaser.Scene {
   }
 
   retractHintTipText() {
-    if (!this.hintTipText) return
+    if (!this.hintTipContainer) return
 
-    const tipText = this.hintTipText
-    this.hintTipText = null
-    this.tweens.killTweensOf(tipText)
+    const tipContainer = this.hintTipContainer
+    this.hintTipContainer = null
+    this.tweens.killTweensOf(tipContainer)
     this.tweens.add({
-      targets: tipText,
+      targets: tipContainer,
       alpha: 0,
       duration: HINT_PANEL_BOUNCE_DURATION,
       ease: 'Cubic.in',
       onComplete: () => {
-        tipText.destroy()
+        tipContainer.destroy(true)
       },
     })
   }
 
   destroyHintTipText() {
-    if (!this.hintTipText) return
+    if (!this.hintTipContainer) return
 
-    this.tweens.killTweensOf(this.hintTipText)
-    this.hintTipText.destroy()
-    this.hintTipText = null
+    this.tweens.killTweensOf(this.hintTipContainer)
+    this.hintTipContainer.destroy(true)
+    this.hintTipContainer = null
   }
 
   animateHintPanelsEntry() {
